@@ -19,21 +19,37 @@ export async function POST(request: Request) {
   }
 
   try {
+    const payload = {
+      persona_id: personaId,
+      conversational_context: "The user has just entered the application for a demo session.",
+      // The greeting is handled here, ensuring the CVI speaks first.
+      custom_greeting: "Hi! I'm Danny, your onboarding tour guide. Welcome! I'm here to help you get settled in quickly. To get us started, could you tell me a little bit about what brings you to the app today?",
+      properties: {
+        max_call_duration: 3600,
+        participant_left_timeout: 60,
+      },
+    };
+
+    console.log("Creating Tavus conversation with payload:", JSON.stringify(payload, null, 2));
+
     const response = await fetch("https://tavusapi.com/v2/conversations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
       },
-      body: JSON.stringify({
-        persona_id: personaId,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("Tavus API Error:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
       return NextResponse.json(
-        { error: errorData.message || "Failed to create conversation" },
+        { error: errorData.message || "Failed to create conversation", details: errorData },
         { status: response.status }
       );
     }
